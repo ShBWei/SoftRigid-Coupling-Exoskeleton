@@ -1,0 +1,67 @@
+# Exoskeleton Motion Prediction – Hyperparameters
+# -----------------------------------------------
+
+data:
+  sample_rate: 50          # IMU sampling rate (Hz)
+  window_seconds: 2.0      # history window length in seconds
+  step_seconds: 0.1        # sliding-window stride in seconds
+  predict_frames: 1        # number of future frames to predict
+  # 5 sensors (spine + 4 limbs) × 6 channels (accel xyz + gyro xyz) = 30
+  num_sensors: 5
+  channels_per_sensor: 6
+  input_dim: 30            # num_sensors × channels_per_sensor
+  # Each sensor maps to a 3-DoF joint → 5 joints × 3 = 15 output values
+  num_joints: 5
+  dof_per_joint: 3
+  output_dim: 15           # num_joints × dof_per_joint
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  data_dir: data/raw
+  processed_dir: data/processed
+  normalize: true
+
+model:
+  type: lstm               # "lstm" or "transformer"
+
+  # LSTM specific
+  lstm:
+    hidden_dim: 256
+    num_layers: 2
+    dropout: 0.2
+    bidirectional: false
+
+  # Transformer specific
+  transformer:
+    d_model: 128
+    nhead: 8
+    num_encoder_layers: 4
+    num_decoder_layers: 4
+    dim_feedforward: 512
+    dropout: 0.1
+    max_seq_len: 512
+
+training:
+  seed: 42
+  device: cpu              # "cpu" or "cuda"
+  batch_size: 64
+  num_epochs: 100
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  lr_scheduler: cosine     # "cosine" or "step"
+  lr_step_size: 30
+  lr_gamma: 0.5
+  clip_grad_norm: 1.0
+  log_interval: 10         # log every N batches
+  val_interval: 1          # validate every N epochs
+  checkpoint_dir: checkpoints
+  log_dir: runs
+  early_stopping_patience: 20
+
+inference:
+  checkpoint: checkpoints/best_model.pth
+  device: cpu
+
+demo:
+  sim_length_seconds: 10   # simulated sensor stream length
+  fps: 50
